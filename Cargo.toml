@@ -12,16 +12,16 @@ repository = "https://github.com/mikelodder7/hash2field"
 version = "0.3.0"
 
 [dependencies]
-digest = "0.9"
-elliptic-curve = { version = "0.10", features = ["arithmetic"] }
+digest = "0.10"
+elliptic-curve = { version = "0.11", features = ["arithmetic"] }
 subtle = "2.4"
 
 [dev-dependencies]
 hex = "0.4"
-k256 = { version = "0.8", features = ["expose-field"] }
+k256 = { version = "0.10", features = ["expose-field"] }
 num-bigint = "0.4"
 num-integer = "0.1"
-sha2 = "0.9"
+sha2 = "0.10"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -1,8 +1,9 @@
 use crate::ExpandMsg;
 use core::marker::PhantomData;
 use digest::{
+    core_api::BlockSizeUser,
     generic_array::{typenum::Unsigned, GenericArray},
-    BlockInput, Digest,
+    Digest,
 };
 use subtle::{Choice, ConditionallySelectable};
 
@@ -15,7 +16,7 @@ pub struct ExpandMsgXmd<HashT> {
 /// ExpandMsgXmd implements expand_message_xmd for the ExpandMsg trait
 impl<HashT, const LEN_IN_BYTES: usize> ExpandMsg<LEN_IN_BYTES> for ExpandMsgXmd<HashT>
 where
-    HashT: Digest + BlockInput,
+    HashT: Digest + BlockSizeUser,
 {
     fn expand_message(msg: &[u8], dst: &[u8]) -> [u8; LEN_IN_BYTES] {
         let b_in_bytes = HashT::OutputSize::to_usize();
@@ -24,18 +25,18 @@ where
             panic!("ell was too big in expand_message_xmd");
         }
         let b_0 = HashT::new()
-            .chain(GenericArray::<u8, HashT::BlockSize>::default())
-            .chain(msg)
-            .chain([(LEN_IN_BYTES >> 8) as u8, LEN_IN_BYTES as u8, 0u8])
-            .chain(dst)
-            .chain([dst.len() as u8])
+            .chain_update(GenericArray::<u8, HashT::BlockSize>::default())
+            .chain_update(msg)
+            .chain_update([(LEN_IN_BYTES >> 8) as u8, LEN_IN_BYTES as u8, 0u8])
+            .chain_update(dst)
+            .chain_update([dst.len() as u8])
             .finalize();
 
         let mut b_vals = HashT::new()
-            .chain(&b_0[..])
-            .chain([1u8])
-            .chain(dst)
-            .chain([dst.len() as u8])
+            .chain_update(&b_0[..])
+            .chain_update([1u8])
+            .chain_update(dst)
+            .chain_update([dst.len() as u8])
             .finalize();
 
         let mut buf = [0u8; LEN_IN_BYTES];
@@ -56,10 +57,10 @@ where
                 offset += 1;
             }
             b_vals = HashT::new()
-                .chain(tmp)
-                .chain([(i + 1) as u8])
-                .chain(dst)
-                .chain([dst.len() as u8])
+                .chain_update(tmp)
+                .chain_update([(i + 1) as u8])
+                .chain_update(dst)
+                .chain_update([dst.len() as u8])
                 .finalize();
         }
         for b in b_vals {
